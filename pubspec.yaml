@@ -1,0 +1,64 @@
+name: programmit_app
+description: ProgramIT - Kampprogram på mobilen
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP for API calls
+  http: ^1.1.0
+
+  # GPS location
+  geolocator: ^10.1.0
+
+  # URL launcher for PDFs and maps
+  url_launcher: ^6.2.2
+
+  # Local storage for login
+  shared_preferences: ^2.2.2
+
+  # Icons
+  cupertino_icons: ^1.0.2
+
+  # Loading indicator
+  flutter_spinkit: ^5.2.0
+
+  # FIREBASE
+  firebase_core: ^2.24.2
+  cloud_firestore: ^4.14.0
+  firebase_auth: ^4.16.0
+
+  # CHAT UTILITIES
+  intl: ^0.18.1
+  uuid: ^4.2.2
+
+  # GOOGLE MAPS
+  google_maps_flutter: ^2.5.0
+  flutter_polyline_points: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1 # <-- LAGT TIL!
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png
+
+# APP ICON KONFIGURASJON
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#FF8C42"
+  adaptive_icon_foreground: "assets/icon.png"

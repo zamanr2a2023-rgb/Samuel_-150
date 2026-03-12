@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "801916846235",
+    "project_id": "programit-e2c7e",
+    "storage_bucket": "programit-e2c7e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:801916846235:android:2c01b59461648dcb64863e",
+        "android_client_info": {
+          "package_name": "com.example.programmit_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC63Z-nR9_zhhy3OdpSTDcC84Mr33Zmnjg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
