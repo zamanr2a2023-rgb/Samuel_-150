@@ -14,6 +14,7 @@ class Event {
   final String tid; // Time: "12:12"
   final String pdfPath;
   final String kode;
+
   final double distance;
 
   Event({

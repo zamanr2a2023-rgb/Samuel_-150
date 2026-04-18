@@ -28,6 +28,7 @@ class ChatMessage {
     );
   }
 
+
   Map<String, dynamic> toMap() {
     return {
       'text': text,

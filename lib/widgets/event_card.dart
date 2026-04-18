@@ -1,174 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/event.dart';
-import '../screens/chat_screen.dart';
-import '../screens/match_detail_screen.dart'; // NY IMPORT!
+import '../screens/match_detail_screen.dart';
 
 class EventCard extends StatelessWidget {
   final Event event;
 
   const EventCard({super.key, required this.event});
 
-  Future<void> _openPdf() async {
-    final Uri url = Uri.parse(event.fullPdfUrl);
-
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      print('Could not launch $url');
-    }
-  }
-
-  Future<void> _openMaps() async {
-    final Uri url = Uri.parse(event.mapsUrl);
-
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      print('Could not launch maps');
-    }
-  }
-
-  void _openChat(BuildContext context) {
-    // Vis chat ID dialog først
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2C3E50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Gå til chat',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                event.name,
-                style: const TextStyle(
-                  color: Color(0xFFFF8C42),
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10), // REDUSERT! (var 12)
-              Row(
-                children: [
-                  const Text(
-                    'Chat ID: ',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                  Text(
-                    event.id,
-                    style: const TextStyle(
-                      color: Color(0xFF27AE60),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(
-                'Avbryt',
-                style: TextStyle(color: Colors.white54),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(); // Lukk dialog
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatScreen(event: event),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF8C42),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Gå til chat'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // NY METODE: Åpne detail screen (som Ørstein)
   void _openDetail(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MatchDetailScreen(event: event),
-      ),
+      MaterialPageRoute(builder: (context) => MatchDetailScreen(event: event)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 4,
       color: const Color(0xFF34495E),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: InkWell(
-        // ENDRET: Åpner detail screen i stedet for PDF!
         onTap: () => _openDetail(context),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Padding(
-          padding: const EdgeInsets.all(12), // REDUSERT! (var 16)
+          padding: const EdgeInsets.all(14),
           child: Column(
             children: [
-              // Header: EVENT badge, Chat icon + Map icon
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'EVENT',
-                    style: TextStyle(
-                      color: Color(0xFFFF8C42),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
+              // EVENT badge
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'EVENT',
+                  style: TextStyle(
+                    color: Color(0xFFFF8C42),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
                   ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.chat_bubble,
-                            color: Color(0xFFFF8C42), size: 24),
-                        onPressed: () => _openChat(context),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        tooltip: 'Chat',
-                      ),
-                      const SizedBox(width: 12),
-                      IconButton(
-                        icon: const Icon(Icons.map,
-                            color: Colors.white70, size: 24),
-                        onPressed: _openMaps,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        tooltip: 'Kart',
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
               // Event logo and name
               Row(
@@ -177,13 +51,13 @@ class EventCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
                       event.fullImageUrl,
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          width: 80,
-                          height: 80,
+                          width: 70,
+                          height: 70,
                           decoration: BoxDecoration(
                             color: Colors.white24,
                             borderRadius: BorderRadius.circular(12),
@@ -191,13 +65,13 @@ class EventCard extends StatelessWidget {
                           child: const Icon(
                             Icons.event,
                             color: Colors.white54,
-                            size: 40,
+                            size: 38,
                           ),
                         );
                       },
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,7 +79,7 @@ class EventCard extends StatelessWidget {
                         Text(
                           event.name,
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -213,17 +87,19 @@ class EventCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 8),
-                        // Date & Time inline
                         Row(
                           children: [
-                            const Icon(Icons.calendar_today,
-                                size: 14, color: Color(0xFFFF8C42)),
+                            const Icon(
+                              Icons.calendar_today,
+                              size: 13,
+                              color: Color(0xFFFF8C42),
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                '${event.dag} kl. ${event.tid}',
+                                '${event.dag}  kl. ${event.tid}',
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   color: Colors.white70,
                                 ),
                               ),
@@ -236,20 +112,22 @@ class EventCard extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
               // Address
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 16, color: Colors.red[400]),
+                  Icon(Icons.location_on, size: 15, color: Colors.red[400]),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       event.address,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Colors.white70,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -257,15 +135,15 @@ class EventCard extends StatelessWidget {
 
               // Distance
               if (event.distance > 0) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(Icons.navigation, size: 14, color: Colors.blue[300]),
+                    Icon(Icons.navigation, size: 13, color: Colors.blue[300]),
                     const SizedBox(width: 4),
                     Text(
                       event.formattedDistance,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.blue[300],
                         fontWeight: FontWeight.bold,
                       ),
@@ -274,63 +152,20 @@ class EventCard extends StatelessWidget {
                 ),
               ],
 
-              // CHAT + PDF buttons
-              if (event.pdfPath.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    // CHAT BUTTON
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _openChat(context),
-                        icon: const Icon(Icons.chat_bubble, size: 18),
-                        label: const Text(
-                          'CHAT',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF8C42),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(0, 44),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
+              const SizedBox(height: 6),
 
-                    const SizedBox(width: 8),
-
-                    // KAMPPROGRAM BUTTON
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _openPdf,
-                        icon: const Icon(Icons.picture_as_pdf, size: 18),
-                        label: const Text(
-                          'Kampprogram',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red[700],
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(0, 44),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              // Tap hint
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.touch_app, size: 13, color: Colors.white30),
+                  SizedBox(width: 4),
+                  Text(
+                    'Trykk for detaljer',
+                    style: TextStyle(fontSize: 11, color: Colors.white30),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
