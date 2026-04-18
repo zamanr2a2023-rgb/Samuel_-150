@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import '../models/event.dart';
+import '../l10n/app_localizations.dart';
 
 class MapScreen extends StatefulWidget {
   final Event event;
@@ -82,8 +82,8 @@ class _MapScreenState extends State<MapScreen> {
         position:
             LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: const InfoWindow(
-          title: 'Din posisjon',
+        infoWindow: InfoWindow(
+          title: AppLocalizations.of(context).mapYourPosition,
         ),
       );
 
@@ -193,19 +193,19 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFFF8C42),
-        title: const Text(
-          'Veibeskrivelse',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.mapDirectionsTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          // Start navigation i Google Maps app
           IconButton(
             icon: const Icon(Icons.navigation),
             onPressed: _openGoogleMapsNavigation,
-            tooltip: 'Start navigasjon',
+            tooltip: l10n.mapStartNavTooltip,
           ),
         ],
       ),
@@ -300,13 +300,13 @@ class _MapScreenState extends State<MapScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
                             _buildTransportButton(
-                                Icons.directions_car, 'Bil', true),
+                                Icons.directions_car, l10n.mapTransportCar, true),
                             _buildTransportButton(
-                                Icons.directions_walk, 'Gå', false),
+                                Icons.directions_walk, l10n.mapTransportWalk, false),
                             _buildTransportButton(
-                                Icons.directions_bus, 'Buss', false),
+                                Icons.directions_bus, l10n.mapTransportBus, false),
                             _buildTransportButton(
-                                Icons.directions_bike, 'Sykkel', false),
+                                Icons.directions_bike, l10n.mapTransportBike, false),
                           ],
                         ),
                       ],
@@ -322,9 +322,9 @@ class _MapScreenState extends State<MapScreen> {
                   child: ElevatedButton.icon(
                     onPressed: _openGoogleMapsNavigation,
                     icon: const Icon(Icons.navigation, size: 24),
-                    label: const Text(
-                      'START NAVIGASJON',
-                      style: TextStyle(
+                    label: Text(
+                      l10n.mapStartNavigation,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,

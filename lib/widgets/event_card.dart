@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
 import '../screens/match_detail_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class EventCard extends StatelessWidget {
   final Event event;
@@ -16,6 +17,7 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 4,
@@ -29,11 +31,11 @@ class EventCard extends StatelessWidget {
           child: Column(
             children: [
               // EVENT badge
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'EVENT',
-                  style: TextStyle(
+                  l10n.labelEvent,
+                  style: const TextStyle(
                     color: Color(0xFFFF8C42),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -155,14 +157,15 @@ class EventCard extends StatelessWidget {
               const SizedBox(height: 6),
 
               // Tap hint
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.touch_app, size: 13, color: Colors.white30),
-                  SizedBox(width: 4),
+                  const Icon(Icons.touch_app, size: 13, color: Colors.white30),
+                  const SizedBox(width: 4),
                   Text(
-                    'Trykk for detaljer',
-                    style: TextStyle(fontSize: 11, color: Colors.white30),
+                    l10n.tapForDetails,
+                    style: const TextStyle(
+                        fontSize: 11, color: Colors.white30),
                   ),
                 ],
               ),

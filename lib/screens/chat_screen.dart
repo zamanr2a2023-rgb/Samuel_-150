@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event.dart';
 import '../services/chat_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 
 class ChatScreen extends StatefulWidget {
   final Event event;
@@ -41,7 +42,6 @@ class _ChatScreenState extends State<ChatScreen> {
         await prefs.setString('userId', savedUserId);
       }
 
-      // Hent eller be om brukernavn (nickname)
       String? savedNickname = prefs.getString('nickname');
       if (savedNickname == null) {
         savedNickname = await _showUsernameDialog();
@@ -50,12 +50,13 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
 
-      // Generer chat ID basert på backend event ID
       String generatedChatId = _chatService.getChatId(widget.event.id);
 
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         userId = savedUserId;
-        nickname = savedNickname ?? 'Anonym';
+        nickname = savedNickname ?? l10n.anonymous;
         chatId = generatedChatId;
         isLoading = false;
       });
@@ -70,42 +71,44 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  /// Vis dialog for å velge brukernavn
   Future<String?> _showUsernameDialog() async {
     String? enteredUsername;
+    final l10n = AppLocalizations.of(context);
 
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Velg brukernavn'),
+          title: Text(l10n.chooseUsername),
           content: TextField(
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Skriv ditt navn...',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: l10n.hintYourName,
+              border: const OutlineInputBorder(),
             ),
             onChanged: (value) {
               enteredUsername = value;
             },
             onSubmitted: (value) {
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
             },
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
               },
-              child: const Text('OK'),
+              child: Text(l10n.ok),
             ),
           ],
         );
       },
     );
 
-    return enteredUsername?.trim().isEmpty ?? true ? 'Anonym' : enteredUsername;
+    final trimmed = enteredUsername?.trim();
+    if (trimmed == null || trimmed.isEmpty) return l10n.anonymous;
+    return trimmed;
   }
 
   /// Send melding
@@ -121,7 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
         chatId: chatId!,
         text: messageText,
         userId: userId!,
-        nickname: nickname ?? 'Anonym',
+        nickname: nickname ?? AppLocalizations.of(context).anonymous,
       );
 
       // Scroll til bunn
@@ -133,9 +136,10 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Kunne ikke sende melding: $e'),
+          content: Text(AppLocalizations.of(context).sendMessageFailed(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -154,8 +158,15 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  String _displayNickname(String raw, AppLocalizations l10n) {
+    if (raw.isEmpty) return l10n.anonymous;
+    if (raw == 'Anonym' || raw == 'Anonymous') return l10n.anonymous;
+    return raw;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF2C3E50),
       appBar: AppBar(
@@ -170,7 +181,7 @@ class _ChatScreenState extends State<ChatScreen> {
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             Text(
-              '${widget.event.dag} kl. ${widget.event.tid}',
+              '${widget.event.dag} ${l10n.timeAt} ${widget.event.tid}',
               style: const TextStyle(fontSize: 12, color: Colors.white70),
             ),
           ],
@@ -179,7 +190,7 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: _changeUsername,
-            tooltip: 'Bytt brukernavn',
+            tooltip: l10n.changeUsernameTooltip,
           ),
         ],
       ),
@@ -201,7 +212,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Chat som: $nickname',
+                          l10n.chatAs(nickname ?? l10n.anonymous),
                           style: const TextStyle(
                               color: Colors.white70, fontSize: 13),
                         ),
@@ -213,10 +224,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 // Meldinger
                 Expanded(
                   child: chatId == null
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'Kunne ikke laste chat',
-                            style: TextStyle(color: Colors.white70),
+                            l10n.chatLoadFailed,
+                            style: const TextStyle(color: Colors.white70),
                           ),
                         )
                       : StreamBuilder<List<ChatMessage>>(
@@ -225,7 +236,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             if (snapshot.hasError) {
                               return Center(
                                 child: Text(
-                                  'Feil: ${snapshot.error}',
+                                  l10n.errorWithDetails('${snapshot.error}'),
                                   style: const TextStyle(color: Colors.red),
                                 ),
                               );
@@ -242,24 +253,24 @@ class _ChatScreenState extends State<ChatScreen> {
                             List<ChatMessage> messages = snapshot.data!;
 
                             if (messages.isEmpty) {
-                              return const Center(
+                              return Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.chat_bubble_outline,
+                                    const Icon(Icons.chat_bubble_outline,
                                         size: 60, color: Colors.white38),
-                                    SizedBox(height: 16),
+                                    const SizedBox(height: 16),
                                     Text(
-                                      'Ingen meldinger ennå',
-                                      style: TextStyle(
+                                      l10n.noMessagesYet,
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         color: Colors.white70,
                                       ),
                                     ),
-                                    SizedBox(height: 8),
+                                    const SizedBox(height: 8),
                                     Text(
-                                      'Vær den første til å skrive!',
-                                      style: TextStyle(
+                                      l10n.beFirstToWrite,
+                                      style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white54,
                                       ),
@@ -278,12 +289,11 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ChatMessage message = messages[index];
                                 // FIKSET: Sjekk også nickname hvis userId mangler (gamle meldinger)
                                 bool isCurrentUser = message.userId == userId ||
-                                    (message.userId == null &&
+                                    (message.userId.isEmpty &&
                                         message.nickname == nickname);
-                                bool isMe = isCurrentUser;
 
                                 return _buildMessageBubble(
-                                    message, isCurrentUser);
+                                    message, isCurrentUser, l10n);
                               },
                             );
                           },
@@ -310,7 +320,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           controller: _messageController,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            hintText: 'Skriv en melding...',
+                            hintText: l10n.hintWriteMessage,
                             hintStyle: const TextStyle(color: Colors.white54),
                             filled: true,
                             fillColor: const Color(0xFF2C3E50),
@@ -342,7 +352,8 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message, bool isMe) {
+  Widget _buildMessageBubble(
+      ChatMessage message, bool isMe, AppLocalizations l10n) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -361,7 +372,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             // VIS NICKNAME FOR ALLE (ikke bare andres!)
             Text(
-              message.nickname,
+              _displayNickname(message.nickname, l10n),
               style: TextStyle(
                 color: isMe ? Colors.white : const Color(0xFFFF8C42),
                 fontSize: 12,

@@ -1,0 +1,111 @@
+{
+  "@@locale": "en",
+  "appTitle": "ProgramIT",
+  "kampprogramSubtitle": "MATCH SCHEDULE",
+  "hintEnterCode": "enter code",
+  "searchByCode": "Search by code",
+  "searchNearby": "Search nearby",
+  "languageEnglish": "EN",
+  "languageNorwegian": "NO",
+  "languageToggleHint": "Switch language",
+  "errorGpsDisabled": "GPS is not enabled",
+  "errorGpsPermissionDenied": "GPS permission denied",
+  "errorGpsPosition": "Could not get GPS position: {error}",
+  "@errorGpsPosition": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "snackNoGps": "Could not get GPS position",
+  "snackNoMatchesNearby": "No matches found nearby",
+  "snackFoundSchedules": "Found {count} match schedules",
+  "@snackFoundSchedules": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "snackSearchFailed": "Search failed: {error}",
+  "@snackSearchFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "snackEnterCode": "Please enter a code",
+  "snackNoMatchesForCode": "No matches found for code: {code}",
+  "@snackNoMatchesForCode": {
+    "placeholders": {
+      "code": {"type": "String"}
+    }
+  },
+  "snackFacebookError": "Could not open Facebook group",
+  "emptySearchPrompt": "Search for matches by code or GPS",
+  "labelMatch": "MATCH",
+  "labelEvent": "EVENT",
+  "tapForDetails": "Tap for details",
+  "tooltipDirections": "Directions",
+  "tooltipChat": "Chat",
+  "tooltipSettings": "Settings",
+  "taglineAnotherMatch": "Time for another match!",
+  "viewMatchSchedule": "VIEW MATCH SCHEDULE",
+  "chooseUsername": "Choose a username",
+  "hintYourName": "Enter your name…",
+  "ok": "OK",
+  "sendMessageFailed": "Could not send message: {error}",
+  "@sendMessageFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "timeAt": "at",
+  "changeUsernameTooltip": "Change username",
+  "chatAs": "Chat as: {name}",
+  "@chatAs": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "chatLoadFailed": "Could not load chat",
+  "errorWithDetails": "Error: {error}",
+  "@errorWithDetails": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noMessagesYet": "No messages yet",
+  "beFirstToWrite": "Be the first to write!",
+  "hintWriteMessage": "Write a message…",
+  "anonymous": "Anonymous",
+  "nicknameRequired": "Please enter a nickname",
+  "settingsSaved": "Settings saved!",
+  "privacyDialogTitle": "Privacy / GDPR",
+  "close": "Close",
+  "settingsTitle": "Settings",
+  "nicknameLabel": "Nickname",
+  "fontSizeLabel": "Font size",
+  "save": "Save",
+  "privacyFooter": "Privacy / GDPR",
+  "privacyIntroTitle": "1. Introduction",
+  "privacyIntroBody": "This app respects your privacy. We only collect and store data necessary to provide app functionality.\n\nBy using the app you agree that data is processed as described in this privacy policy.",
+  "privacyStoredTitle": "2. What information is stored",
+  "privacyStoredBody": "The app may store:\n• Chat messages you send\n• Message timestamps\n\nWe do not store more information than necessary to provide the service.",
+  "privacyUseTitle": "3. How information is used",
+  "privacyUseBody": "Information is used only to provide the in-app chat feature. It is not used for advertising or marketing.",
+  "privacyStorageTitle": "4. Data storage",
+  "privacyStorageBody": "Data is stored in Cloud Firestore (Google Firebase). Google may process data according to its security and privacy policies.",
+  "privacySharingTitle": "5. Sharing information",
+  "privacySharingBody": "We do not share your personal information with third parties.",
+  "privacySecurityTitle": "6. Security",
+  "privacySecurityBody": "We work to protect your data using secure systems and access control to the database.",
+  "privacyRightsTitle": "7. Your rights",
+  "privacyRightsBody": "You have the right to:\n• receive information about what data is stored\n• request deletion of your data\n• stop using the service",
+  "privacyContactTitle": "9. Contact",
+  "privacyContactBody": "Privacy questions can be sent to:\nbestilling@programmit.no",
+  "mapDirectionsTitle": "Directions",
+  "mapYourPosition": "Your position",
+  "mapStartNavTooltip": "Start navigation",
+  "mapStartNavigation": "START NAVIGATION",
+  "mapTransportCar": "Car",
+  "mapTransportWalk": "Walk",
+  "mapTransportBus": "Bus",
+  "mapTransportBike": "Bike"
+}

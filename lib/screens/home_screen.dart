@@ -6,6 +6,17 @@ import '../models/event.dart';
 import '../services/api_service.dart';
 import '../widgets/match_card.dart';
 import '../widgets/event_card.dart';
+import '../l10n/app_localizations.dart';
+import '../app_locale.dart';
+
+/// Persistent GPS / search error shown in the main panel (re-resolves on locale change).
+enum _HomePanelError {
+  none,
+  gpsDisabled,
+  gpsPermissionDenied,
+  gpsPositionFailed,
+  searchFailed,
+}
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -17,7 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Event> events = [];
   bool isLoading = false;
-  String errorMessage = '';
+  _HomePanelError panelError = _HomePanelError.none;
+  String panelErrorDetail = '';
   Position? currentPosition;
 
   @override
@@ -26,12 +38,29 @@ class _HomeScreenState extends State<HomeScreen> {
     _getCurrentLocation();
   }
 
+  String _panelErrorText(AppLocalizations l10n) {
+    switch (panelError) {
+      case _HomePanelError.none:
+        return '';
+      case _HomePanelError.gpsDisabled:
+        return l10n.errorGpsDisabled;
+      case _HomePanelError.gpsPermissionDenied:
+        return l10n.errorGpsPermissionDenied;
+      case _HomePanelError.gpsPositionFailed:
+        return l10n.errorGpsPosition(panelErrorDetail);
+      case _HomePanelError.searchFailed:
+        return l10n.snackSearchFailed(panelErrorDetail);
+    }
+  }
+
   Future<void> _getCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        if (!mounted) return;
         setState(() {
-          errorMessage = 'GPS er ikke aktivert';
+          panelError = _HomePanelError.gpsDisabled;
+          panelErrorDetail = '';
         });
         return;
       }
@@ -40,8 +69,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
+          if (!mounted) return;
           setState(() {
-            errorMessage = 'GPS-tillatelse nektet';
+            panelError = _HomePanelError.gpsPermissionDenied;
+            panelErrorDetail = '';
           });
           return;
         }
@@ -51,28 +82,35 @@ class _HomeScreenState extends State<HomeScreen> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      if (!mounted) return;
       setState(() {
         currentPosition = position;
+        panelError = _HomePanelError.none;
+        panelErrorDetail = '';
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        errorMessage = 'Kunne ikke hente GPS-posisjon: $e';
+        panelError = _HomePanelError.gpsPositionFailed;
+        panelErrorDetail = e.toString();
       });
     }
   }
 
   Future<void> _searchByLocation() async {
+    final l10n = AppLocalizations.of(context);
     if (currentPosition == null) {
       await _getCurrentLocation();
       if (currentPosition == null) {
-        _showSnackBar('Kunne ikke hente GPS-posisjon', Colors.red);
+        _showSnackBar(l10n.snackNoGps, Colors.red);
         return;
       }
     }
 
     setState(() {
       isLoading = true;
-      errorMessage = '';
+      panelError = _HomePanelError.none;
+      panelErrorDetail = '';
     });
 
     try {
@@ -87,29 +125,33 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       if (fetchedEvents.isEmpty) {
-        _showSnackBar('Ingen kamper funnet i nærheten', Colors.orange);
+        _showSnackBar(l10n.snackNoMatchesNearby, Colors.orange);
       } else {
-        _showSnackBar('Fant ${fetchedEvents.length} kampprogram', Colors.green);
+        _showSnackBar(
+            l10n.snackFoundSchedules(fetchedEvents.length), Colors.green);
       }
     } catch (e) {
       setState(() {
         isLoading = false;
-        errorMessage = 'Søk feilet: $e';
+        panelError = _HomePanelError.searchFailed;
+        panelErrorDetail = e.toString();
       });
-      _showSnackBar('Søk feilet: $e', Colors.red);
+      _showSnackBar(l10n.snackSearchFailed(e.toString()), Colors.red);
     }
   }
 
   Future<void> _searchByCode() async {
+    final l10n = AppLocalizations.of(context);
     String code = _codeController.text.trim();
     if (code.isEmpty) {
-      _showSnackBar('Vennligst skriv inn en kode', Colors.orange);
+      _showSnackBar(l10n.snackEnterCode, Colors.orange);
       return;
     }
 
     setState(() {
       isLoading = true;
-      errorMessage = '';
+      panelError = _HomePanelError.none;
+      panelErrorDetail = '';
     });
 
     try {
@@ -125,17 +167,18 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       if (results.isEmpty) {
-        _showSnackBar('Ingen kamper funnet med kode: ${_codeController.text}',
+        _showSnackBar(l10n.snackNoMatchesForCode(_codeController.text),
             Colors.orange);
       } else {
-        _showSnackBar('Fant ${results.length} kampprogram', Colors.green);
+        _showSnackBar(l10n.snackFoundSchedules(results.length), Colors.green);
       }
     } catch (e) {
       setState(() {
         isLoading = false;
-        errorMessage = 'Søk feilet: $e';
+        panelError = _HomePanelError.searchFailed;
+        panelErrorDetail = e.toString();
       });
-      _showSnackBar('Søk feilet: $e', Colors.red);
+      _showSnackBar(l10n.snackSearchFailed(e.toString()), Colors.red);
     }
   }
 
@@ -144,78 +187,121 @@ class _HomeScreenState extends State<HomeScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: color,
-        duration: Duration(seconds: 3),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
+  Future<void> _onLanguageSelected(Set<String> selected) async {
+    final code = selected.first;
+    await saveAppLocale(Locale(code));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final langCode = Localizations.localeOf(context).languageCode;
+
     return Scaffold(
-      backgroundColor: Color(0xFF2C3E50),
+      backgroundColor: const Color(0xFF2C3E50),
       body: SafeArea(
         child: Column(
           children: [
-            // PROGRAMMIT LOGO - STØRRE OG KANT-TIL-KANT!
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  Tooltip(
+                    message: l10n.languageToggleHint,
+                    child: SegmentedButton<String>(
+                      showSelectedIcon: false,
+                      style: SegmentedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        // Same fill for both segments when unselected; orange only for selected.
+                        backgroundColor: const Color(0xFF34495E),
+                        foregroundColor: Colors.white70,
+                        selectedBackgroundColor: const Color(0xFFFF8C42),
+                        selectedForegroundColor: const Color(0xFF2C3E50),
+                        side: const BorderSide(color: Color(0x44FFFFFF)),
+                      ),
+                      segments: [
+                        ButtonSegment<String>(
+                          value: 'en',
+                          label: Text(l10n.languageEnglish),
+                        ),
+                        ButtonSegment<String>(
+                          value: 'nb',
+                          label: Text(l10n.languageNorwegian),
+                        ),
+                      ],
+                      selected: {langCode == 'en' ? 'en' : 'nb'},
+                      onSelectionChanged: _onLanguageSelected,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Container(
               width: double.infinity,
-              height: 200, // STØRRE! (var 180)
-              color: Color(0xFF2C3E50),
-              padding: EdgeInsets.zero, // INGEN PADDING - dekker alt!
+              height: 200,
+              color: const Color(0xFF2C3E50),
+              padding: EdgeInsets.zero,
               child: Image.asset(
                 'assets/logo.png',
-                fit: BoxFit.cover, // Dekker hele området!
+                fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   print(' Logo asset error: $error');
                   return Container(
                     height: 200,
                     width: double.infinity,
-                    color: Color(0xFF2C3E50),
-                    padding: EdgeInsets.symmetric(vertical: 25),
+                    color: const Color(0xFF2C3E50),
+                    padding: const EdgeInsets.symmetric(vertical: 25),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.sports_soccer,
+                            const Icon(Icons.sports_soccer,
                                 size: 50, color: Colors.white),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Container(
-                              padding: EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Color(0xFF27AE60),
+                                color: const Color(0xFF27AE60),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Icon(Icons.calendar_today,
+                              child: const Icon(Icons.calendar_today,
                                   size: 40, color: Colors.white),
                             ),
-                            SizedBox(width: 10),
-                            Icon(Icons.sports_basketball,
+                            const SizedBox(width: 10),
+                            const Icon(Icons.sports_basketball,
                                 size: 50, color: Colors.orange),
                           ],
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Text(
-                          'ProgramIT',
-                          style: TextStyle(
+                          l10n.appTitle,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 2,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Color(0xFF1E5BA8),
+                            color: const Color(0xFF1E5BA8),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            'KAMPPROGRAM',
-                            style: TextStyle(
+                            l10n.kampprogramSubtitle,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -229,12 +315,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-
-            // Orange header - MINDRE!
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(10), // MINDRE! (var 14)
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
                 color: Color(0xFFFF8C42),
                 boxShadow: [
                   BoxShadow(
@@ -246,65 +330,63 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Column(
                 children: [
-                  // Kode-søk - MINDRE!
                   TextField(
                     controller: _codeController,
-                    style: TextStyle(color: Color(0xFF2C3E50), fontSize: 14),
+                    style: const TextStyle(
+                        color: Color(0xFF2C3E50), fontSize: 14),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
-                      hintText: 'skriv inn kode',
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                      hintText: l10n.hintEnterCode,
+                      hintStyle:
+                          const TextStyle(color: Colors.grey, fontSize: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                     ),
                     onSubmitted: (_) => _searchByCode(),
                   ),
-
-                  SizedBox(height: 8), // MINDRE! (var 12)
-
-                  // Knapper - MINDRE!
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _searchByCode,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF2C3E50),
+                            backgroundColor: const Color(0xFF2C3E50),
                             foregroundColor: Colors.white,
-                            minimumSize: Size(0, 42), // MINDRE! (var 46)
+                            minimumSize: const Size(0, 42),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: Text(
-                            'Søk på kode',
-                            style: TextStyle(
+                            l10n.searchByCode,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: isLoading ? null : _searchByLocation,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF2C3E50),
+                            backgroundColor: const Color(0xFF2C3E50),
                             foregroundColor: Colors.white,
-                            minimumSize: Size(0, 42), // MINDRE! (var 46)
+                            minimumSize: const Size(0, 42),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: Text(
-                            'Søk i nærheten',
-                            style: TextStyle(
+                            l10n.searchNearby,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
@@ -313,10 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-
-                  SizedBox(height: 8), // MINDRE! (var 12)
-
-                  // FACEBOOK IKON - MINDRE!
+                  const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () async {
                       final url = Uri.parse(
@@ -329,8 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text('Kunne ikke åpne Facebook-gruppe'),
+                                content: Text(l10n.snackFacebookError),
                                 backgroundColor: Colors.red,
                               ),
                             );
@@ -341,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Kunne ikke åpne Facebook-gruppe'),
+                              content: Text(l10n.snackFacebookError),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -349,12 +427,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
                     },
                     child: Container(
-                      width: 52, // MINDRE! (var 60)
-                      height: 52, // MINDRE! (var 60)
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
-                        color: Color(0xFF1877F2),
+                        color: const Color(0xFF1877F2),
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: Colors.black26,
                             blurRadius: 6,
@@ -362,12 +440,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      child: Center(
+                      child: const Center(
                         child: Text(
                           'f',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 38, // MINDRE! (var 42)
+                            fontSize: 38,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'serif',
                           ),
@@ -378,10 +456,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-
-            // Results
             if (isLoading)
-              Expanded(
+              const Expanded(
                 child: Center(
                   child: SpinKitCircle(
                     color: Color(0xFFFF8C42),
@@ -389,14 +465,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               )
-            else if (errorMessage.isNotEmpty)
+            else if (panelError != _HomePanelError.none)
               Expanded(
                 child: Center(
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(20),
                     child: Text(
-                      errorMessage,
-                      style: TextStyle(
+                      _panelErrorText(l10n),
+                      style: const TextStyle(
                         color: Colors.red,
                         fontSize: 16,
                       ),
@@ -411,15 +487,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.search_off,
                         size: 80,
                         color: Colors.white38,
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
-                        'Søk etter kamper med kode eller GPS',
-                        style: TextStyle(
+                        l10n.emptySearchPrompt,
+                        style: const TextStyle(
                           color: Colors.white54,
                           fontSize: 16,
                         ),
@@ -432,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
             else
               Expanded(
                 child: ListView.builder(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   itemCount: events.length,
                   itemBuilder: (context, index) {
                     Event event = events[index];

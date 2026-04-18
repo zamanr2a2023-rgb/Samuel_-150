@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/event.dart';
 import '../screens/chat_screen.dart';
 import '../screens/settings_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class MatchDetailScreen extends StatelessWidget {
   final Event event;
@@ -43,6 +44,7 @@ class MatchDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF2C3E50),
       appBar: AppBar(
@@ -61,19 +63,17 @@ class MatchDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.location_on, size: 26),
             onPressed: _openMaps,
-            tooltip: 'Veibeskrivelse',
+            tooltip: l10n.tooltipDirections,
           ),
-          // CHAT – går direkte til chat
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline_rounded, size: 26),
             onPressed: () => _openChat(context),
-            tooltip: 'Chat',
+            tooltip: l10n.tooltipChat,
           ),
-          // INNSTILLINGER
           IconButton(
             icon: const Icon(Icons.settings, size: 26),
             onPressed: () => _openSettings(context),
-            tooltip: 'Innstillinger',
+            tooltip: l10n.tooltipSettings,
           ),
         ],
       ),
@@ -229,16 +229,16 @@ class MatchDetailScreen extends StatelessWidget {
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(
+                          children: [
+                            const Icon(
                               Icons.sports_soccer,
                               color: Colors.white,
                               size: 26,
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Text(
-                              'Tid for nok en kamp!',
-                              style: TextStyle(
+                              l10n.taglineAnotherMatch,
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -298,9 +298,9 @@ class MatchDetailScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: _openPdf,
                   icon: const Icon(Icons.picture_as_pdf, size: 24),
-                  label: const Text(
-                    'VIS KAMPPROGRAM',
-                    style: TextStyle(
+                  label: Text(
+                    l10n.viewMatchSchedule,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -27,11 +28,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _saveSettings() async {
+    final l10n = AppLocalizations.of(context);
     final name = _nicknameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vennligst skriv inn et kallenavn'),
+        SnackBar(
+          content: Text(l10n.nicknameRequired),
           backgroundColor: Colors.red,
         ),
       );
@@ -44,10 +46,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Innstillinger lagret!'),
-          backgroundColor: Color(0xFFFF8C42),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n.settingsSaved),
+          backgroundColor: const Color(0xFFFF8C42),
+          duration: const Duration(seconds: 2),
         ),
       );
       Navigator.pop(context);
@@ -55,67 +57,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showPrivacy() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: const Color(0xFF1E3252),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Personvern / GDPR',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.privacyDialogTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              _PrivacySection(
-                title: '1. Innledning',
-                body:
-                    'Denne appen respekterer ditt personvern. Vi samler kun inn og lagrer data som er nødvendig for å levere funksjonaliteten i appen.\n\nVed å bruke appen godtar du at data behandles slik det beskrives i denne personvernerklæringen.',
-              ),
-              _PrivacySection(
-                title: '2. Hvilke opplysninger som lagres',
-                body:
-                    'Appen kan lagre følgende opplysninger:\n• Chatmeldinger du sender\n• Tidspunkt for meldinger\n\nVi lagrer ikke flere opplysninger enn det som er nødvendig for å levere tjenesten.',
-              ),
-              _PrivacySection(
-                title: '3. Hvordan opplysningene brukes',
-                body:
-                    'Opplysningene brukes kun til å levere chat-funksjonen i appen. Opplysningene brukes ikke til reklame eller markedsføring.',
-              ),
-              _PrivacySection(
-                title: '4. Lagring av data',
-                body:
-                    'Data lagres i Cloud Firestore, som er en del av Google Firebase. Google kan behandle data i henhold til sine sikkerhets- og personvernregler.',
-              ),
-              _PrivacySection(
-                title: '5. Deling av informasjon',
-                body: 'Vi deler ikke dine personopplysninger med tredjeparter.',
-              ),
-              _PrivacySection(
-                title: '6. Sikkerhet',
-                body:
-                    'Vi jobber for å beskytte dine data ved å bruke sikre systemer og tilgangskontroll til databasen.',
-              ),
-              _PrivacySection(
-                title: '7. Dine rettigheter',
-                body:
-                    'Du har rett til å:\n• få informasjon om hvilke data som lagres\n• be om at dine data slettes\n• slutte å bruke tjenesten',
-              ),
-              _PrivacySection(
-                title: '9. Kontakt',
-                body:
-                    'Spørsmål om personvern kan sendes til:\nbestilling@programmit.no',
-              ),
+            children: [
+              _PrivacySection(title: l10n.privacyIntroTitle, body: l10n.privacyIntroBody),
+              _PrivacySection(title: l10n.privacyStoredTitle, body: l10n.privacyStoredBody),
+              _PrivacySection(title: l10n.privacyUseTitle, body: l10n.privacyUseBody),
+              _PrivacySection(title: l10n.privacyStorageTitle, body: l10n.privacyStorageBody),
+              _PrivacySection(title: l10n.privacySharingTitle, body: l10n.privacySharingBody),
+              _PrivacySection(title: l10n.privacySecurityTitle, body: l10n.privacySecurityBody),
+              _PrivacySection(title: l10n.privacyRightsTitle, body: l10n.privacyRightsBody),
+              _PrivacySection(title: l10n.privacyContactTitle, body: l10n.privacyContactBody),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Lukk',
-              style: TextStyle(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              l10n.close,
+              style: const TextStyle(
                 color: Color(0xFFFF8C42),
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -129,6 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF1E3252),
       appBar: AppBar(
@@ -168,9 +141,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 18),
 
-                    const Text(
-                      'Innstillinger',
-                      style: TextStyle(
+                    Text(
+                      l10n.settingsTitle,
+                      style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -179,12 +152,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SizedBox(height: 44),
 
-                    // Kallenavn label
-                    const Align(
+                    Align(
                       alignment: Alignment.center,
                       child: Text(
-                        'Kallenavn',
-                        style: TextStyle(
+                        l10n.nicknameLabel,
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFFFF8C42),
@@ -219,9 +191,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 36),
 
                     // Font størrelse label
-                    const Text(
-                      'Font størrelse',
-                      style: TextStyle(
+                    Text(
+                      l10n.fontSizeLabel,
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFFFF8C42),
@@ -266,9 +238,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         elevation: 4,
                       ),
-                      child: const Text(
-                        'Lagre',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.save,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -288,11 +260,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.only(bottom: 36),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text('🔒  ', style: TextStyle(fontSize: 18)),
+                  children: [
+                    const Text('🔒  ', style: TextStyle(fontSize: 18)),
                     Text(
-                      'Personvern / GDPR',
-                      style: TextStyle(
+                      l10n.privacyFooter,
+                      style: const TextStyle(
                         color: Color(0xFFFF8C42),
                         fontSize: 17,
                         fontWeight: FontWeight.w500,
