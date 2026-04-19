@@ -1,116 +1,76 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uuid/uuid.dart';
-
-class ChatMessage {
-  final String id;
-  final String text;
-  final String userId;
-  final String nickname;
-  final DateTime createdAt;
-
-  ChatMessage({
-    required this.id,
-    required this.text,
-    required this.userId,
-    required this.nickname,
-    required this.createdAt,
-  });
-
-  factory ChatMessage.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
-    return ChatMessage(
-      id: doc.id,
-      text: data['text'] ?? '',
-      userId: data['userId'] ?? '',
-      nickname: data['nickname'] ?? 'Anonym',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-    );
-  }
-
-
-  Map<String, dynamic> toMap() {
-    return {
-      'text': text,
-      'userId': userId,
-      'nickname': nickname,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
-  }
-}
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:programmit_app/core/utils/app_log.dart';
+import 'package:programmit_app/features/chat/data/models/chat_message.dart';
 
 class ChatService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final Uuid _uuid = const Uuid();
+  ChatService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  /// Generer chat ID basert på backend event ID
-  String getChatId(String eventId) {
-    // Bruk backend ID direkte (20, 21, 22, etc.)
-    return eventId;
-  }
+  final FirebaseFirestore _firestore;
 
-  /// Send melding til en kamp-chat
+  static const String _rooms = 'chatRooms';
+  static const String _messages = 'messages';
+
+  /// Same id the Laravel API uses for the event/match.
+  String getChatId(String eventId) => eventId;
+
+  /// Writes a message document that satisfies Firestore rules (senderId, etc.).
   Future<void> sendMessage({
     required String chatId,
     required String text,
-    required String userId,
     required String nickname,
   }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      throw Exception('Not signed in; cannot send chat message.');
+    }
+
     try {
       await _firestore
-          .collection('chatRooms') // ENDRET fra 'chats'!
+          .collection(_rooms)
           .doc(chatId)
-          .collection('messages')
+          .collection(_messages)
           .add({
-        'text': text,
-        'userId': userId,
+        'senderId': uid,
         'nickname': nickname,
+        'text': text,
         'createdAt': FieldValue.serverTimestamp(),
+        'isRemoved': false,
+        'removedAt': null,
+        'removedReason': null,
       });
-
-      print(' Message sent to chat: $chatId');
-    } catch (e) {
-      print(' Error sending message: $e');
+      appLog('chat: message written to $_rooms/$chatId/$_messages');
+    } catch (e, st) {
+      appLog('chat: sendMessage failed: $e\n$st');
       throw Exception('Could not send message: $e');
     }
   }
 
-  /// Hent meldinger for en kamp (real-time stream)
   Stream<List<ChatMessage>> getMessages(String chatId) {
     return _firestore
-        .collection('chatRooms') // ENDRET fra 'chats'!
+        .collection(_rooms)
         .doc(chatId)
-        .collection('messages')
+        .collection(_messages)
         .orderBy('createdAt', descending: true)
-        .limit(100) // Maksimum 100 meldinger
+        .limit(100)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => ChatMessage.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map(ChatMessage.fromFirestore).toList();
     });
   }
 
-  /// Generer unik bruker-ID (lagres lokalt)
-  String generateUserId() {
-    return _uuid.v4();
-  }
-
-  /// Tell antall meldinger i en chat (FIKSET!)
   Future<int> getMessageCount(String chatId) async {
     try {
-      // FIKSET: Bruk AggregateQuerySnapshot korrekt
-      AggregateQuerySnapshot snapshot = await _firestore
-          .collection('chatRooms') // ENDRET fra 'chats'!
+      final snapshot = await _firestore
+          .collection(_rooms)
           .doc(chatId)
-          .collection('messages')
+          .collection(_messages)
           .count()
           .get();
-
-      // FIKSET: Tilgang count via count property
       return snapshot.count ?? 0;
-    } catch (e) {
-      print(' Error counting messages: $e');
+    } catch (e, st) {
+      appLog('chat: getMessageCount failed: $e\n$st');
       return 0;
     }
   }

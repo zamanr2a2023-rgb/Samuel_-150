@@ -35,6 +35,7 @@
   "changeUsernameTooltip": "Bytt brukernavn",
   "chatAs": "Chat som: {name}",
   "chatLoadFailed": "Kunne ikke laste chat",
+  "chatSignInRequired": "Kunne ikke logge inn for chat. Sjekk nett, Firebase-innstillinger og at anonym innlogging er aktivert. Firestore-regler må tillate innloggede brukere å lese dette rommet.",
   "errorWithDetails": "Feil: {error}",
   "noMessagesYet": "Ingen meldinger ennå",
   "beFirstToWrite": "Vær den første til å skrive!",

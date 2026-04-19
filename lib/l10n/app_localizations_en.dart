@@ -126,6 +126,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatLoadFailed => 'Could not load chat';
 
   @override
+  String get chatSignInRequired =>
+      'Could not sign in for chat. Check your connection, Firebase project settings, and that Anonymous sign-in is enabled. Firestore rules must allow signed-in users to read this room.';
+
+  @override
   String errorWithDetails(String error) {
     return 'Error: $error';
   }

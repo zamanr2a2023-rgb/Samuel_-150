@@ -1,0 +1,166 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isNonEmptyString(value, maxLen) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= maxLen;
+    }
+
+    function isTimestampField(value) {
+      return value is timestamp;
+    }
+
+    function currentUserIsBanned() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/bannedUsers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/bannedUsers/$(request.auth.uid)).data.isActive == true;
+    }
+
+    match /bannedUsers/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    match /chatRooms/{roomId} {
+      allow read: if signedIn();
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if signedIn();
+
+        allow create: if signedIn()
+          && !currentUserIsBanned()
+          && request.resource.data.keys().hasOnly([
+            "senderId",
+            "nickname",
+            "text",
+            "createdAt",
+            "isRemoved",
+            "removedAt",
+            "removedReason"
+          ])
+          && request.resource.data.senderId == request.auth.uid
+          && isNonEmptyString(request.resource.data.nickname, 40)
+          && isNonEmptyString(request.resource.data.text, 2000)
+          && isTimestampField(request.resource.data.createdAt)
+          && request.resource.data.isRemoved == false
+          && request.resource.data.removedAt == null
+          && request.resource.data.removedReason == null;
+
+        allow update: if signedIn()
+          && !currentUserIsBanned()
+          && resource.data.senderId == request.auth.uid
+          && request.resource.data.senderId == resource.data.senderId
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.nickname == resource.data.nickname
+          && request.resource.data.isRemoved == resource.data.isRemoved
+          && request.resource.data.removedAt == resource.data.removedAt
+          && request.resource.data.removedReason == resource.data.removedReason
+          && isNonEmptyString(request.resource.data.text, 2000);
+
+        allow delete: if false;
+      }
+    }
+
+    match /reports/{reportId} {
+      allow create: if signedIn()
+        && !currentUserIsBanned()
+        && request.resource.data.keys().hasOnly([
+          "chatRoomId",
+          "messageId",
+          "reportedUserId",
+          "reportedNickname",
+          "reportedText",
+          "reportedAt",
+          "deadlineAt",
+          "reportedByUserId",
+          "reportedByNickname",
+          "status",
+          "requiresModeratorAction"
+        ])
+        && isNonEmptyString(request.resource.data.chatRoomId, 100)
+        && isNonEmptyString(request.resource.data.messageId, 200)
+        && isNonEmptyString(request.resource.data.reportedUserId, 128)
+        && isNonEmptyString(request.resource.data.reportedNickname, 40)
+        && isNonEmptyString(request.resource.data.reportedText, 2000)
+        && isTimestampField(request.resource.data.reportedAt)
+        && isTimestampField(request.resource.data.deadlineAt)
+        && request.resource.data.reportedByUserId == request.auth.uid
+        && isNonEmptyString(request.resource.data.reportedByNickname, 40)
+        && request.resource.data.status == "pending"
+        && request.resource.data.requiresModeratorAction == true
+        && request.resource.data.reportedUserId != request.auth.uid;
+
+      allow read: if signedIn()
+        && resource.data.reportedByUserId == request.auth.uid;
+
+      allow update, delete: if false;
+    }
+
+    match /userBlocks/{blockId} {
+      allow create: if signedIn()
+        && !currentUserIsBanned()
+        && request.resource.data.keys().hasOnly([
+          "chatRoomId",
+          "blockedUserId",
+          "blockedNickname",
+          "sampleMessageId",
+          "sampleText",
+          "blockedAt",
+          "blockedByUserId",
+          "blockedByNickname",
+          "reason"
+        ])
+        && isNonEmptyString(request.resource.data.chatRoomId, 100)
+        && isNonEmptyString(request.resource.data.blockedUserId, 128)
+        && isNonEmptyString(request.resource.data.blockedNickname, 40)
+        && isNonEmptyString(request.resource.data.sampleMessageId, 200)
+        && isNonEmptyString(request.resource.data.sampleText, 2000)
+        && isTimestampField(request.resource.data.blockedAt)
+        && request.resource.data.blockedByUserId == request.auth.uid
+        && isNonEmptyString(request.resource.data.blockedByNickname, 40)
+        && isNonEmptyString(request.resource.data.reason, 200)
+        && request.resource.data.blockedUserId != request.auth.uid;
+
+      allow read: if signedIn()
+        && resource.data.blockedByUserId == request.auth.uid;
+
+      allow update, delete: if false;
+    }
+
+    match /feedRemovals/{removalId} {
+      allow create: if signedIn()
+        && !currentUserIsBanned()
+        && request.resource.data.keys().hasOnly([
+          "chatRoomId",
+          "messageId",
+          "removedNickname",
+          "removedText",
+          "removedAt",
+          "removedByUserId",
+          "removedByNickname",
+          "reason"
+        ])
+        && isNonEmptyString(request.resource.data.chatRoomId, 100)
+        && isNonEmptyString(request.resource.data.messageId, 200)
+        && isNonEmptyString(request.resource.data.removedNickname, 40)
+        && isNonEmptyString(request.resource.data.removedText, 2000)
+        && isTimestampField(request.resource.data.removedAt)
+        && request.resource.data.removedByUserId == request.auth.uid
+        && isNonEmptyString(request.resource.data.removedByNickname, 40)
+        && isNonEmptyString(request.resource.data.reason, 200);
+
+      allow read: if signedIn()
+        && resource.data.removedByUserId == request.auth.uid;
+
+      allow update, delete: if false;
+    }
+  }
+}

@@ -1,52 +1,36 @@
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'l10n/app_localizations.dart';
-import 'app_locale.dart';
-import 'screens/home_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:programmit_app/app.dart';
+import 'package:programmit_app/core/utils/app_log.dart';
+import 'package:programmit_app/firebase_options.dart';
+import 'package:programmit_app/services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp();
-    print(' Firebase initialized successfully!');
-  } catch (e) {
-    print(' Firebase initialization error: $e');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    appLog('Firebase init OK');
+  } catch (e, st) {
+    appLog('Firebase init failed: $e\n$st');
+  }
+
+  try {
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.signInAnonymously();
+    }
+    appLog('Firebase auth uid: ${FirebaseAuth.instance.currentUser?.uid}');
+  } catch (e, st) {
+    appLog(
+      'Anonymous sign-in failed (enable Anonymous in Firebase Console): '
+      '$e\n$st',
+    );
   }
 
   await loadSavedAppLocale();
 
   runApp(const ProgramITApp());
-}
-
-class ProgramITApp extends StatelessWidget {
-  const ProgramITApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<Locale>(
-      valueListenable: appLocaleNotifier,
-      builder: (context, locale, _) {
-        return MaterialApp(
-          title: 'ProgramIT',
-          debugShowCheckedModeBanner: false,
-          locale: locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          theme: ThemeData(
-            primaryColor: const Color(0xFFFF8C42),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFFFF8C42),
-              primary: const Color(0xFFFF8C42),
-              secondary: const Color(0xFF27AE60),
-              brightness: Brightness.dark,
-            ),
-            scaffoldBackgroundColor: const Color(0xFF2C3E50),
-            useMaterial3: true,
-          ),
-          home: HomeScreen(),
-        );
-      },
-    );
-  }
 }

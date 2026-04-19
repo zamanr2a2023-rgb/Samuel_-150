@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/event.dart';
-import '../screens/match_detail_screen.dart';
-import '../l10n/app_localizations.dart';
+import 'package:programmit_app/core/constants/app_colors.dart';
+import 'package:programmit_app/features/events/data/models/event.dart';
+import 'package:programmit_app/features/events/presentation/screens/match_detail_screen.dart';
+import 'package:programmit_app/l10n/app_localizations.dart';
 
 class MatchCard extends StatelessWidget {
   final Event event;
@@ -9,37 +10,59 @@ class MatchCard extends StatelessWidget {
   const MatchCard({super.key, required this.event});
 
   void _openDetail(BuildContext context) {
-    Navigator.push(
+    Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (context) => MatchDetailScreen(event: event)),
+      MaterialPageRoute<void>(
+        builder: (_) => MatchDetailScreen(event: event),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    const radius = 20.0;
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      elevation: 4,
-      color: const Color(0xFF34495E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      elevation: 0,
+      color: AppColors.surfaceElevated,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+        side: BorderSide(
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
       child: InkWell(
         onTap: () => _openDetail(context),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(radius),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Column(
             children: [
-              // KAMP badge
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.labelMatch,
-                  style: const TextStyle(
-                    color: Color(0xFF27AE60),
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      l10n.labelMatch,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -111,29 +134,39 @@ class MatchCard extends StatelessWidget {
 
               // Date & Time
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 14,
+                  vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF8C42).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.scaffold.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(14),
+                  border: const Border(
+                    left: BorderSide(
+                      color: AppColors.primary,
+                      width: 4,
+                    ),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(
-                      Icons.calendar_today,
-                      size: 15,
-                      color: Color(0xFFFF8C42),
+                      Icons.calendar_today_rounded,
+                      size: 16,
+                      color: AppColors.primary,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${event.dag}  kl. ${event.tid}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        '${event.dag}  kl. ${event.tid}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],
@@ -207,20 +240,27 @@ class MatchCard extends StatelessWidget {
 
   Widget _buildTeamLogo(String imageUrl) {
     return Container(
-      width: 66,
-      height: 66,
+      width: 68,
+      height: 68,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Image.network(
           imageUrl,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => const Icon(
             Icons.sports_soccer,
-            color: Color(0xFFFF8C42),
+            color: AppColors.primary,
             size: 36,
           ),
         ),

@@ -126,6 +126,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get chatLoadFailed => 'Kunne ikke laste chat';
 
   @override
+  String get chatSignInRequired =>
+      'Kunne ikke logge inn for chat. Sjekk nett, Firebase-innstillinger og at anonym innlogging er aktivert. Firestore-regler må tillate innloggede brukere å lese dette rommet.';
+
+  @override
   String errorWithDetails(String error) {
     return 'Feil: $error';
   }

@@ -1,15 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
-import '../models/event.dart';
-import '../l10n/app_localizations.dart';
+
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:programmit_app/core/constants/app_colors.dart';
+import 'package:programmit_app/core/utils/app_log.dart';
+import 'package:programmit_app/features/events/data/models/event.dart';
+import 'package:programmit_app/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MapScreen extends StatefulWidget {
-  final Event event;
+  const MapScreen({super.key, required this.event});
 
-  const MapScreen({Key? key, required this.event}) : super(key: key);
+  final Event event;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -18,54 +21,43 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   Position? _currentPosition;
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
-  bool _isLoading = true;
+  var _markers = <Marker>{};
+  var _polylines = <Polyline>{};
+  var _isLoading = true;
   String? _distance;
   String? _duration;
+
+  double get _venueLat => double.parse(widget.event.lat);
+  double get _venueLng => double.parse(widget.event.longi);
 
   @override
   void initState() {
     super.initState();
-    _initializeMap();
+    unawaited(_initializeMap());
   }
 
   Future<void> _initializeMap() async {
     try {
-      // Hent brukerens posisjon
-      Position position = await Geolocator.getCurrentPosition(
+      final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-
-      setState(() {
-        _currentPosition = position;
-      });
-
-      // Sett markers
+      if (!mounted) return;
+      setState(() => _currentPosition = position);
       _setMarkers();
-
-      // Beregn rute (simulert - du kan bruke Google Directions API for ekte rute)
       _calculateRoute();
-
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      print(' Error getting location: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
+    } catch (e, st) {
+      appLog('map: location failed: $e\n$st');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _setMarkers() {
-    // Destinasjon marker (arena)
+    if (!mounted) return;
+
     final destinationMarker = Marker(
       markerId: const MarkerId('destination'),
-      position: LatLng(
-        double.parse(widget.event.lat),
-        double.parse(widget.event.longi),
-      ),
+      position: LatLng(_venueLat, _venueLng),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
       infoWindow: InfoWindow(
         title: widget.event.address,
@@ -75,117 +67,90 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
 
-    // Brukerens posisjon marker
     if (_currentPosition != null) {
       final currentMarker = Marker(
         markerId: const MarkerId('current'),
-        position:
-            LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        position: LatLng(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+        ),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         infoWindow: InfoWindow(
           title: AppLocalizations.of(context).mapYourPosition,
         ),
       );
-
-      setState(() {
-        _markers = {destinationMarker, currentMarker};
-      });
+      setState(() => _markers = {destinationMarker, currentMarker});
     } else {
-      setState(() {
-        _markers = {destinationMarker};
-      });
+      setState(() => _markers = {destinationMarker});
     }
   }
 
   void _calculateRoute() {
-    if (_currentPosition == null) return;
+    final pos = _currentPosition;
+    if (pos == null) return;
 
-    // Enkel rett linje (for demo)
-    // For ekte veibeskrivelse, bruk Google Directions API
     final polyline = Polyline(
       polylineId: const PolylineId('route'),
       points: [
-        LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-        LatLng(
-          double.parse(widget.event.lat),
-          double.parse(widget.event.longi),
-        ),
+        LatLng(pos.latitude, pos.longitude),
+        LatLng(_venueLat, _venueLng),
       ],
-      color: const Color(0xFF2196F3),
+      color: AppColors.mapRoute,
       width: 5,
     );
 
-    setState(() {
-      _polylines = {polyline};
-    });
+    setState(() => _polylines = {polyline});
 
-    // Beregn avstand
-    _calculateDistance();
-  }
-
-  void _calculateDistance() {
-    if (_currentPosition == null) return;
-
-    double distanceInMeters = Geolocator.distanceBetween(
-      _currentPosition!.latitude,
-      _currentPosition!.longitude,
-      double.parse(widget.event.lat),
-      double.parse(widget.event.longi),
+    final distanceM = Geolocator.distanceBetween(
+      pos.latitude,
+      pos.longitude,
+      _venueLat,
+      _venueLng,
     );
-
-    double distanceInKm = distanceInMeters / 1000;
-
-    // Simulert tid (gjennomsnitt 30 km/t)
-    double durationInMinutes = (distanceInKm / 30) * 60;
+    final distanceKm = distanceM / 1000;
+    const avgKmh = 30.0;
+    final durationMin = (distanceKm / avgKmh) * 60;
 
     setState(() {
-      _distance = distanceInKm < 1
-          ? '${distanceInMeters.toStringAsFixed(0)} m'
-          : '${distanceInKm.toStringAsFixed(1)} km';
-      _duration = durationInMinutes < 1
+      _distance = distanceKm < 1
+          ? '${distanceM.toStringAsFixed(0)} m'
+          : '${distanceKm.toStringAsFixed(1)} km';
+      _duration = durationMin < 1
           ? '< 1 min'
-          : '${durationInMinutes.toStringAsFixed(0)} min';
+          : '${durationMin.toStringAsFixed(0)} min';
     });
   }
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
+    final pos = _currentPosition;
+    if (pos == null) return;
 
-    // Zoom til å vise begge markere
-    if (_currentPosition != null) {
-      LatLngBounds bounds = LatLngBounds(
-        southwest: LatLng(
-          _currentPosition!.latitude < double.parse(widget.event.lat)
-              ? _currentPosition!.latitude
-              : double.parse(widget.event.lat),
-          _currentPosition!.longitude < double.parse(widget.event.longi)
-              ? _currentPosition!.longitude
-              : double.parse(widget.event.longi),
-        ),
-        northeast: LatLng(
-          _currentPosition!.latitude > double.parse(widget.event.lat)
-              ? _currentPosition!.latitude
-              : double.parse(widget.event.lat),
-          _currentPosition!.longitude > double.parse(widget.event.longi)
-              ? _currentPosition!.longitude
-              : double.parse(widget.event.longi),
-        ),
-      );
-
-      Future.delayed(const Duration(milliseconds: 300), () {
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLngBounds(bounds, 100),
-        );
-      });
-    }
-  }
-
-  // Åpne Google Maps eksternt for ekte turn-by-turn navigation
-  Future<void> _openGoogleMapsNavigation() async {
-    final Uri url = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=${widget.event.lat},${widget.event.longi}&travelmode=driving',
+    final bounds = LatLngBounds(
+      southwest: LatLng(
+        pos.latitude < _venueLat ? pos.latitude : _venueLat,
+        pos.longitude < _venueLng ? pos.longitude : _venueLng,
+      ),
+      northeast: LatLng(
+        pos.latitude > _venueLat ? pos.latitude : _venueLat,
+        pos.longitude > _venueLng ? pos.longitude : _venueLng,
+      ),
     );
 
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+      await _mapController?.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 100),
+      );
+    });
+  }
+
+  Future<void> _openGoogleMapsNavigation() async {
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=${widget.event.lat},${widget.event.longi}'
+      '&travelmode=driving',
+    );
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -196,7 +161,7 @@ class _MapScreenState extends State<MapScreen> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF8C42),
+        backgroundColor: AppColors.primary,
         title: Text(
           l10n.mapDirectionsTitle,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -211,23 +176,19 @@ class _MapScreenState extends State<MapScreen> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFFF8C42),
-              ),
+              child: CircularProgressIndicator(color: AppColors.primary),
             )
           : Stack(
               children: [
-                // Google Maps
                 GoogleMap(
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
                     target: _currentPosition != null
-                        ? LatLng(_currentPosition!.latitude,
-                            _currentPosition!.longitude)
-                        : LatLng(
-                            double.parse(widget.event.lat),
-                            double.parse(widget.event.longi),
-                          ),
+                        ? LatLng(
+                            _currentPosition!.latitude,
+                            _currentPosition!.longitude,
+                          )
+                        : LatLng(_venueLat, _venueLng),
                     zoom: 14,
                   ),
                   markers: _markers,
@@ -237,8 +198,6 @@ class _MapScreenState extends State<MapScreen> {
                   zoomControlsEnabled: true,
                   mapToolbarEnabled: false,
                 ),
-
-                // Info kort øverst (som Ørstein har "Veibeskrivelse" kort)
                 Positioned(
                   top: 16,
                   left: 16,
@@ -250,7 +209,7 @@ class _MapScreenState extends State<MapScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -263,7 +222,7 @@ class _MapScreenState extends State<MapScreen> {
                           children: [
                             const Icon(
                               Icons.location_on,
-                              color: Color(0xFFFF8C42),
+                              color: AppColors.primary,
                               size: 28,
                             ),
                             const SizedBox(width: 12),
@@ -276,7 +235,7 @@ class _MapScreenState extends State<MapScreen> {
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2C3E50),
+                                      color: AppColors.scaffold,
                                     ),
                                   ),
                                   if (_distance != null && _duration != null)
@@ -292,29 +251,36 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 12),
-
-                        // Transport valg (som Ørstein)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildTransportButton(
-                                Icons.directions_car, l10n.mapTransportCar, true),
-                            _buildTransportButton(
-                                Icons.directions_walk, l10n.mapTransportWalk, false),
-                            _buildTransportButton(
-                                Icons.directions_bus, l10n.mapTransportBus, false),
-                            _buildTransportButton(
-                                Icons.directions_bike, l10n.mapTransportBike, false),
+                            _transportChip(
+                              Icons.directions_car,
+                              l10n.mapTransportCar,
+                              selected: true,
+                            ),
+                            _transportChip(
+                              Icons.directions_walk,
+                              l10n.mapTransportWalk,
+                              selected: false,
+                            ),
+                            _transportChip(
+                              Icons.directions_bus,
+                              l10n.mapTransportBus,
+                              selected: false,
+                            ),
+                            _transportChip(
+                              Icons.directions_bike,
+                              l10n.mapTransportBike,
+                              selected: false,
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
                 ),
-
-                // Start navigasjon knapp nederst (som Ørstein)
                 Positioned(
                   bottom: 16,
                   left: 16,
@@ -331,7 +297,7 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2196F3),
+                      backgroundColor: AppColors.mapRoute,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
@@ -346,19 +312,20 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildTransportButton(IconData icon, String label, bool isSelected) {
+  Widget _transportChip(IconData icon, String label, {required bool selected}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF2196F3) : Colors.grey[200],
+        color: selected ? AppColors.mapRoute : Colors.grey[200],
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
             size: 20,
-            color: isSelected ? Colors.white : Colors.grey[700],
+            color: selected ? Colors.white : Colors.grey[700],
           ),
           const SizedBox(width: 4),
           Text(
@@ -366,7 +333,7 @@ class _MapScreenState extends State<MapScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : Colors.grey[700],
+              color: selected ? Colors.white : Colors.grey[700],
             ),
           ),
         ],

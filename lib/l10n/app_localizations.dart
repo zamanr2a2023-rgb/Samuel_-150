@@ -308,6 +308,12 @@ abstract class AppLocalizations {
   /// **'Could not load chat'**
   String get chatLoadFailed;
 
+  /// No description provided for @chatSignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign in for chat. Check your connection, Firebase project settings, and that Anonymous sign-in is enabled. Firestore rules must allow signed-in users to read this room.'**
+  String get chatSignInRequired;
+
   /// No description provided for @errorWithDetails.
   ///
   /// In en, this message translates to:

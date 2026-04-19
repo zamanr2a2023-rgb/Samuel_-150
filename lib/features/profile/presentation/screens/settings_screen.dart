@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:programmit_app/core/constants/app_colors.dart';
+import 'package:programmit_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final TextEditingController _nicknameController = TextEditingController();
-  double _fontSize = 15.0;
+  final _nicknameController = TextEditingController();
+  var _fontSize = 15.0;
 
   @override
   void initState() {
@@ -19,8 +20,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSettings();
   }
 
+  @override
+  void dispose() {
+    _nicknameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadSettings() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _nicknameController.text = prefs.getString('nickname') ?? '';
       _fontSize = prefs.getDouble('fontSize') ?? 15.0;
@@ -40,32 +48,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setString('nickname', name);
     await prefs.setDouble('fontSize', _fontSize);
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.settingsSaved),
-          backgroundColor: const Color(0xFFFF8C42),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      Navigator.pop(context);
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.settingsSaved),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    Navigator.pop(context);
   }
 
   void _showPrivacy() {
     final l10n = AppLocalizations.of(context);
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1E3252),
+        backgroundColor: AppColors.settingsBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n.privacyDialogTitle,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -88,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               l10n.close,
               style: const TextStyle(
-                color: Color(0xFFFF8C42),
+                color: AppColors.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -103,9 +113,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF1E3252),
+      backgroundColor: AppColors.settingsBackground,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E3252),
+        backgroundColor: AppColors.settingsBackground,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 22),
@@ -121,8 +131,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 24),
-
-                    // Gear icons – matching Øystein's layout
                     Stack(
                       alignment: Alignment.center,
                       children: [
@@ -138,9 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Icon(Icons.settings, size: 60, color: Colors.grey[500]),
                       ],
                     ),
-
                     const SizedBox(height: 18),
-
                     Text(
                       l10n.settingsTitle,
                       style: const TextStyle(
@@ -149,24 +155,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: Colors.white,
                       ),
                     ),
-
                     const SizedBox(height: 44),
-
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        l10n.nicknameLabel,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFFF8C42),
-                        ),
+                    Text(
+                      l10n.nicknameLabel,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
-                    // Nickname text field
                     TextField(
                       controller: _nicknameController,
                       style: const TextStyle(
@@ -187,50 +185,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 36),
-
-                    // Font størrelse label
                     Text(
                       l10n.fontSizeLabel,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFFF8C42),
+                        color: AppColors.primary,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Font size slider
                     SliderTheme(
-                      data: SliderThemeData(
-                        activeTrackColor: const Color(0xFF3A8EEA),
+                      data: const SliderThemeData(
+                        activeTrackColor: AppColors.sliderActive,
                         inactiveTrackColor: Colors.white24,
                         thumbColor: Colors.white,
-                        overlayColor: const Color(0x223A8EEA),
+                        overlayColor: AppColors.sliderOverlay,
                         trackHeight: 4,
-                        thumbShape: const RoundSliderThumbShape(
-                          enabledThumbRadius: 14,
-                        ),
+                        thumbShape:
+                            RoundSliderThumbShape(enabledThumbRadius: 14),
                       ),
                       child: Slider(
                         value: _fontSize,
-                        min: 12.0,
-                        max: 22.0,
-                        onChanged: (value) {
-                          setState(() => _fontSize = value);
-                        },
+                        min: 12,
+                        max: 22,
+                        onChanged: (value) => setState(() => _fontSize = value),
                       ),
                     ),
-
                     const SizedBox(height: 36),
-
-                    // Lagre button
                     ElevatedButton(
                       onPressed: _saveSettings,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF8C42),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(150, 50),
                         shape: RoundedRectangleBorder(
@@ -246,14 +232,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 60),
                   ],
                 ),
               ),
             ),
-
-            // Personvern / GDPR at the bottom
             GestureDetector(
               onTap: _showPrivacy,
               child: Padding(
@@ -265,7 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       l10n.privacyFooter,
                       style: const TextStyle(
-                        color: Color(0xFFFF8C42),
+                        color: AppColors.primary,
                         fontSize: 17,
                         fontWeight: FontWeight.w500,
                       ),
@@ -281,11 +264,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// Helper widget for privacy text sections
 class _PrivacySection extends StatelessWidget {
+  const _PrivacySection({required this.title, required this.body});
+
   final String title;
   final String body;
-  const _PrivacySection({required this.title, required this.body});
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +280,7 @@ class _PrivacySection extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              color: Color(0xFFFF8C42),
+              color: AppColors.primary,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),

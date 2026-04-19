@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/event.dart';
-import '../screens/match_detail_screen.dart';
-import '../l10n/app_localizations.dart';
+import 'package:programmit_app/core/constants/app_colors.dart';
+import 'package:programmit_app/features/events/data/models/event.dart';
+import 'package:programmit_app/features/events/presentation/screens/match_detail_screen.dart';
+import 'package:programmit_app/l10n/app_localizations.dart';
 
 class EventCard extends StatelessWidget {
   final Event event;
@@ -9,37 +10,59 @@ class EventCard extends StatelessWidget {
   const EventCard({super.key, required this.event});
 
   void _openDetail(BuildContext context) {
-    Navigator.push(
+    Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (context) => MatchDetailScreen(event: event)),
+      MaterialPageRoute<void>(
+        builder: (_) => MatchDetailScreen(event: event),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    const radius = 20.0;
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      elevation: 4,
-      color: const Color(0xFF34495E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      elevation: 0,
+      color: AppColors.surfaceElevated,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+        side: BorderSide(
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
       child: InkWell(
         onTap: () => _openDetail(context),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(radius),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // EVENT badge
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.labelEvent,
-                  style: const TextStyle(
-                    color: Color(0xFFFF8C42),
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      l10n.labelEvent,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -50,19 +73,19 @@ class EventCard extends StatelessWidget {
               Row(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     child: Image.network(
                       event.fullImageUrl,
-                      width: 70,
-                      height: 70,
+                      width: 72,
+                      height: 72,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          width: 70,
-                          height: 70,
+                          width: 72,
+                          height: 72,
                           decoration: BoxDecoration(
                             color: Colors.white24,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
                             Icons.event,
@@ -94,7 +117,7 @@ class EventCard extends StatelessWidget {
                             const Icon(
                               Icons.calendar_today,
                               size: 13,
-                              color: Color(0xFFFF8C42),
+                              color: AppColors.primary,
                             ),
                             const SizedBox(width: 4),
                             Expanded(

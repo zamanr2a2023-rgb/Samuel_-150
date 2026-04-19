@@ -1,22 +1,4 @@
 class Event {
-  final String id; // Backend event ID (20, 21, 22, etc.)
-  final String userId;
-  final String name;
-  final String cell; // "MatchCell" or "EventCell"
-  final String address;
-  final String homeTeam; // Image URL
-  final String awayTeam; // Image URL
-  final String homeTeamText;
-  final String awayTeamText;
-  final String lat;
-  final String longi;
-  final String dag; // Date: "2026-09-03"
-  final String tid; // Time: "12:12"
-  final String pdfPath;
-  final String kode;
-
-  final double distance;
-
   Event({
     required this.id,
     required this.userId,
@@ -35,6 +17,49 @@ class Event {
     required this.kode,
     required this.distance,
   });
+
+  /// Backend id (e.g. 20, 21, 22).
+  final String id;
+  final String userId;
+  final String name;
+
+  /// `MatchCell` or `EventCell` from API.
+  final String cell;
+  final String address;
+
+  /// Image paths or URLs for home / away crests.
+  final String homeTeam;
+  final String awayTeam;
+  final String homeTeamText;
+  final String awayTeamText;
+
+  final String lat;
+  final String longi;
+
+  /// ISO date `2026-09-03`.
+  final String dag;
+
+  /// Time `12:12`.
+  final String tid;
+  final String pdfPath;
+  final String kode;
+  final double distance;
+
+  static const _monthAbbrev = [
+    '',
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'mai',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'okt',
+    'nov',
+    'des',
+  ];
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
@@ -67,12 +92,8 @@ class Event {
   bool get isMatch => cell == 'MatchCell';
   bool get isEvent => cell == 'EventCell';
 
-  String get displayName {
-    if (isMatch) {
-      return '$homeTeamText vs $awayTeamText';
-    }
-    return name;
-  }
+  String get displayName =>
+      isMatch ? '$homeTeamText vs $awayTeamText' : name;
 
   String get formattedDistance {
     if (distance == 0) return '';
@@ -81,56 +102,26 @@ class Event {
 
   String get formattedDateTime {
     try {
-      DateTime dateTime = DateTime.parse('$dag $tid:00');
-      List<String> months = [
-        '',
-        'jan',
-        'feb',
-        'mar',
-        'apr',
-        'mai',
-        'jun',
-        'jul',
-        'aug',
-        'sep',
-        'okt',
-        'nov',
-        'des'
-      ];
-
-      return '${dateTime.day}. ${months[dateTime.month]} ${dateTime.year}, $tid';
-    } catch (e) {
+      final dateTime = DateTime.parse('$dag $tid:00');
+      return '${dateTime.day}. ${_monthAbbrev[dateTime.month]} '
+          '${dateTime.year}, $tid';
+    } catch (_) {
       return '$dag, $tid';
     }
   }
 
-  String get fullImageUrl {
-    if (homeTeam.startsWith('http')) {
-      return homeTeam;
-    }
-    return 'https://www.programmit.no/$homeTeam';
-  }
+  String get fullImageUrl =>
+      homeTeam.startsWith('http') ? homeTeam : 'https://www.programmit.no/$homeTeam';
 
-  String get awayTeamImageUrl {
-    if (awayTeam.startsWith('http')) {
-      return awayTeam;
-    }
-    return 'https://www.programmit.no/$awayTeam';
-  }
+  String get awayTeamImageUrl =>
+      awayTeam.startsWith('http') ? awayTeam : 'https://www.programmit.no/$awayTeam';
 
   String get fullPdfUrl {
     if (pdfPath.isEmpty) return '';
-
-    if (pdfPath.startsWith('http')) {
-      return pdfPath;
-    }
-
-    // PDF-filer ligger i data/ mappen på serveren
+    if (pdfPath.startsWith('http')) return pdfPath;
     return 'https://www.programmit.no/data/$pdfPath';
   }
 
-  String get mapsUrl {
-    // Google Maps URL for navigation
-    return 'https://www.google.com/maps/search/?api=1&query=$lat,$longi';
-  }
+  String get mapsUrl =>
+      'https://www.google.com/maps/search/?api=1&query=$lat,$longi';
 }

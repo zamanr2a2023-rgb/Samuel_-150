@@ -3,8 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const String kAppLocalePrefKey = 'app_locale';
 
-/// Global locale for [MaterialApp]. Toggle from UI and persist with [saveAppLocale].
-final ValueNotifier<Locale> appLocaleNotifier = ValueNotifier(const Locale('nb'));
+/// Drives [MaterialApp.locale]; persist with [saveAppLocale].
+final ValueNotifier<Locale> appLocaleNotifier =
+    ValueNotifier(const Locale('nb'));
 
 Future<void> loadSavedAppLocale() async {
   final prefs = await SharedPreferences.getInstance();

@@ -1,42 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:programmit_app/core/constants/app_colors.dart';
+import 'package:programmit_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:programmit_app/features/events/data/models/event.dart';
+import 'package:programmit_app/features/profile/presentation/screens/settings_screen.dart';
+import 'package:programmit_app/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../models/event.dart';
-import '../screens/chat_screen.dart';
-import '../screens/settings_screen.dart';
-import '../l10n/app_localizations.dart';
 
 class MatchDetailScreen extends StatelessWidget {
+  const MatchDetailScreen({super.key, required this.event});
+
   final Event event;
 
-  const MatchDetailScreen({Key? key, required this.event}) : super(key: key);
-
-  // Gå direkte til chat – ingen dialog, ingen ID-visning
   void _openChat(BuildContext context) {
-    Navigator.push(
+    Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (context) => ChatScreen(event: event)),
+      MaterialPageRoute<void>(builder: (_) => ChatScreen(event: event)),
     );
   }
 
-  // Åpne innstillinger
   void _openSettings(BuildContext context) {
-    Navigator.push(
+    Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
     );
   }
 
-  // Åpne Google Maps
   Future<void> _openMaps() async {
-    final Uri url = Uri.parse(event.mapsUrl);
+    final url = Uri.parse(event.mapsUrl);
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
 
-  // Åpne PDF
   Future<void> _openPdf() async {
-    final Uri url = Uri.parse(event.fullPdfUrl);
+    final url = Uri.parse(event.fullPdfUrl);
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -46,9 +43,9 @@ class MatchDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF2C3E50),
+      backgroundColor: AppColors.scaffold,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF8C42),
+        backgroundColor: AppColors.primary,
         title: Text(
           event.address,
           style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
@@ -59,7 +56,6 @@ class MatchDetailScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          // KART – åpner Google Maps
           IconButton(
             icon: const Icon(Icons.location_on, size: 26),
             onPressed: _openMaps,
@@ -86,7 +82,7 @@ class MatchDetailScreen extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2C3E50), Color(0xFF34495E)],
+                  colors: [AppColors.scaffold, AppColors.surface],
                 ),
               ),
               child: SingleChildScrollView(
@@ -98,11 +94,8 @@ class MatchDetailScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // HOME TEAM LOGO
                       _buildTeamLogo(event.fullImageUrl),
-
                       const SizedBox(height: 16),
-
                       if (event.isMatch)
                         Text(
                           event.homeTeamText,
@@ -113,20 +106,17 @@ class MatchDetailScreen extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
-
                       const SizedBox(height: 32),
-
-                      // VS
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 40,
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF8C42).withOpacity(0.2),
+                          color: AppColors.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
-                            color: const Color(0xFFFF8C42),
+                            color: AppColors.primary,
                             width: 2,
                           ),
                         ),
@@ -140,15 +130,10 @@ class MatchDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 32),
-
-                      // AWAY TEAM
                       if (event.isMatch) ...[
                         _buildTeamLogo(event.awayTeamImageUrl),
-
                         const SizedBox(height: 16),
-
                         Text(
                           event.awayTeamText,
                           textAlign: TextAlign.center,
@@ -159,14 +144,11 @@ class MatchDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ],
-
                       const SizedBox(height: 48),
-
-                      // DATO OG TID
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF34495E),
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: Column(
@@ -176,7 +158,7 @@ class MatchDetailScreen extends StatelessWidget {
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  color: Color(0xFFFF8C42),
+                                  color: AppColors.primary,
                                   size: 26,
                                 ),
                                 const SizedBox(width: 12),
@@ -202,10 +184,7 @@ class MatchDetailScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
-                      // «Tid for nok en kamp!»
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -214,14 +193,14 @@ class MatchDetailScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFFFF8C42),
-                              const Color(0xFFFF8C42).withOpacity(0.75),
+                              AppColors.primary,
+                              AppColors.primary.withValues(alpha: 0.75),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF8C42).withOpacity(0.4),
+                              color: AppColors.primary.withValues(alpha: 0.4),
                               blurRadius: 18,
                               offset: const Offset(0, 5),
                             ),
@@ -247,10 +226,7 @@ class MatchDetailScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
-                      // AVSTAND
                       if (event.distance > 0)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -271,7 +247,6 @@ class MatchDetailScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -279,16 +254,14 @@ class MatchDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // PDF KNAPP BUNNEN
           if (event.pdfPath.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFF34495E),
+                color: AppColors.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -332,7 +305,7 @@ class MatchDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -347,7 +320,7 @@ class MatchDetailScreen extends StatelessWidget {
             child: Icon(
               Icons.sports_soccer,
               size: 70,
-              color: Color(0xFFFF8C42),
+              color: AppColors.primary,
             ),
           ),
         ),
