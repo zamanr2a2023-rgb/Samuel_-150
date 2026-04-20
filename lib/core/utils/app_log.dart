@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-/// Writes to the console in debug builds only.
+/// Debug-only trace (stripped in release).
 void appLog(String message) {
   if (kDebugMode) {
-    debugPrint(message);
+    debugPrint('pm › $message');
   }
 }

@@ -45,14 +45,13 @@ class MatchDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
         title: Text(
           event.address,
           style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           overflow: TextOverflow.ellipsis,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -206,8 +205,9 @@ class MatchDetailScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        width: double.infinity,
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
                               Icons.sports_soccer,
@@ -215,12 +215,18 @@ class MatchDetailScreen extends StatelessWidget {
                               size: 26,
                             ),
                             const SizedBox(width: 10),
-                            Text(
-                              l10n.taglineAnotherMatch,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                            Flexible(
+                              child: Text(
+                                l10n.taglineAnotherMatch,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  height: 1.2,
+                                ),
                               ),
                             ),
                           ],

@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:programmit_app/core/constants/app_colors.dart';
 import 'package:programmit_app/core/utils/app_log.dart';
+import 'package:programmit_app/core/widgets/loading_widget.dart';
 import 'package:programmit_app/features/events/data/models/event.dart';
 import 'package:programmit_app/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -160,24 +161,19 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
+      backgroundColor: AppColors.scaffold,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        title: Text(
-          l10n.mapDirectionsTitle,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(l10n.mapDirectionsTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.navigation),
+            icon: const Icon(Icons.navigation_rounded),
             onPressed: _openGoogleMapsNavigation,
             tooltip: l10n.mapStartNavTooltip,
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
+          ? const LoadingWidget()
           : Stack(
               children: [
                 GoogleMap(

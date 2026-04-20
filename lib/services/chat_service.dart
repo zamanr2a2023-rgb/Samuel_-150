@@ -5,17 +5,16 @@ import 'package:programmit_app/features/chat/data/models/chat_message.dart';
 
 class ChatService {
   ChatService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _db = firestore ?? FirebaseFirestore.instance;
 
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore _db;
 
   static const String _rooms = 'chatRooms';
   static const String _messages = 'messages';
 
-  /// Same id the Laravel API uses for the event/match.
+  /// Matches the PHP/API event id.
   String getChatId(String eventId) => eventId;
 
-  /// Writes a message document that satisfies Firestore rules (senderId, etc.).
   Future<void> sendMessage({
     required String chatId,
     required String text,
@@ -23,15 +22,11 @@ class ChatService {
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      throw Exception('Not signed in; cannot send chat message.');
+      throw StateError('Not signed in');
     }
 
     try {
-      await _firestore
-          .collection(_rooms)
-          .doc(chatId)
-          .collection(_messages)
-          .add({
+      await _db.collection(_rooms).doc(chatId).collection(_messages).add({
         'senderId': uid,
         'nickname': nickname,
         'text': text,
@@ -40,37 +35,35 @@ class ChatService {
         'removedAt': null,
         'removedReason': null,
       });
-      appLog('chat: message written to $_rooms/$chatId/$_messages');
+      appLog('chat write $_rooms/$chatId');
     } catch (e, st) {
-      appLog('chat: sendMessage failed: $e\n$st');
+      appLog('chat send: $e\n$st');
       throw Exception('Could not send message: $e');
     }
   }
 
   Stream<List<ChatMessage>> getMessages(String chatId) {
-    return _firestore
+    return _db
         .collection(_rooms)
         .doc(chatId)
         .collection(_messages)
         .orderBy('createdAt', descending: true)
         .limit(100)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map(ChatMessage.fromFirestore).toList();
-    });
+        .map((snap) => snap.docs.map(ChatMessage.fromFirestore).toList());
   }
 
   Future<int> getMessageCount(String chatId) async {
     try {
-      final snapshot = await _firestore
+      final snap = await _db
           .collection(_rooms)
           .doc(chatId)
           .collection(_messages)
           .count()
           .get();
-      return snapshot.count ?? 0;
+      return snap.count ?? 0;
     } catch (e, st) {
-      appLog('chat: getMessageCount failed: $e\n$st');
+      appLog('chat count: $e\n$st');
       return 0;
     }
   }

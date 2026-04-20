@@ -18,16 +18,13 @@ class Event {
     required this.distance,
   });
 
-  /// Backend id (e.g. 20, 21, 22).
   final String id;
   final String userId;
   final String name;
 
-  /// `MatchCell` or `EventCell` from API.
   final String cell;
   final String address;
 
-  /// Image paths or URLs for home / away crests.
   final String homeTeam;
   final String awayTeam;
   final String homeTeamText;
@@ -36,10 +33,7 @@ class Event {
   final String lat;
   final String longi;
 
-  /// ISO date `2026-09-03`.
   final String dag;
-
-  /// Time `12:12`.
   final String tid;
   final String pdfPath;
   final String kode;

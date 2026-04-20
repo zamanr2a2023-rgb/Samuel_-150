@@ -1,4 +1,5 @@
-/// Route names for [MaterialApp] when you switch to named navigation.
+/// Central place for route paths when you wire [MaterialApp.routes] /
+/// [onGenerateRoute].
 abstract final class AppRoutes {
   static const String home = '/';
 }

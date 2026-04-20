@@ -131,20 +131,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 24),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Positioned(
-                          left: 100,
-                          top: 12,
-                          child: Icon(
-                            Icons.settings,
-                            size: 38,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                        Icon(Icons.settings, size: 60, color: Colors.grey[500]),
-                      ],
+                    Icon(
+                      Icons.settings_outlined,
+                      size: 56,
+                      color: Colors.white.withValues(alpha: 0.22),
                     ),
                     const SizedBox(height: 18),
                     Text(
@@ -244,7 +234,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('🔒  ', style: TextStyle(fontSize: 18)),
+                    const Icon(
+                      Icons.lock_outline_rounded,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       l10n.privacyFooter,
                       style: const TextStyle(
